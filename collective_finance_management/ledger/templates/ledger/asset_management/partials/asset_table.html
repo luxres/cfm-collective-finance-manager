@@ -1,0 +1,177 @@
+{# PARTIAL: HTMX fragment for this feature's page only. #}
+<div id="{{ table_id }}" class="card shadow-sm">
+
+    <div class="card-header d-flex justify-content-between align-items-center">
+
+        <strong>Assets</strong>
+
+        <button class="btn btn-sm btn-success"
+                hx-get="{% url 'add_asset_htmx' collective.id %}"
+                hx-target="#modalContent"
+                hx-trigger="click"
+                data-bs-toggle="modal"
+                data-bs-target="#modal">
+            + Asset
+        </button>
+
+    </div>
+
+    <div class="card-body p-0">
+
+        <table class="table mb-0 align-middle">
+
+            <thead>
+            <tr>
+
+                <th class="text-center">
+                    <a class="text-dark overview-link"
+                       hx-get="{{ sort_links.id }}"
+                       hx-target="#{{ table_id }}"
+                       hx-swap="outerHTML">
+                        Asset ID
+                        {% if current_sort == "id" %}▲{% elif current_sort == "-id" %}▼{% endif %}
+                    </a>
+                </th>
+
+                <th class="text-center">
+                    <a class="text-dark overview-link"
+                       hx-get="{{ sort_links.name }}"
+                       hx-target="#{{ table_id }}"
+                       hx-swap="outerHTML">
+                        Name
+                        {% if current_sort == "name" %}▲{% elif current_sort == "-name" %}▼{% endif %}
+                    </a>
+                </th>
+
+                <th class="text-center">
+                    <a class="text-dark overview-link"
+                       hx-get="{{ sort_links.purchase_date }}"
+                       hx-target="#{{ table_id }}"
+                       hx-swap="outerHTML">
+                        Purchase Date
+                        {% if current_sort == "purchase_date" %}▲{% elif current_sort == "-purchase_date" %}▼{% endif %}
+                    </a>
+                </th>
+
+                <th class="text-end">
+                    <a class="text-dark overview-link"
+                       hx-get="{{ sort_links.purchase_price }}"
+                       hx-target="#{{ table_id }}"
+                       hx-swap="outerHTML">
+                        Purchase Price
+                        {% if current_sort == "purchase_price" %}▲{% elif current_sort == "-purchase_price" %}▼{% endif %}
+                    </a>
+                </th>
+
+                <th class="text-center">
+                    <a class="text-dark overview-link"
+                       hx-get="{{ sort_links.receipt_id }}"
+                       hx-target="#{{ table_id }}"
+                       hx-swap="outerHTML">
+                        Receipt ID
+                        {% if current_sort == "receipt_id" %}▲{% elif current_sort == "-receipt_id" %}▼{% endif %}
+                    </a>
+                </th>
+
+                <th class="text-center">Asset Pool</th>
+                <th class="text-end">Book Value</th>
+                <th class="text-center">Status</th>
+                <th></th>
+            </tr>
+            </thead>
+
+            <tbody>
+
+            {% for a in assets %}
+
+                <tr>
+
+                    <td class="text-center fw-bold">
+                        <a href="{% url 'asset_overview_page' a.id %}" class="overview-link text-dark">#{{ a.id }}</a>
+                    </td>
+
+                    <td class="text-center fw-semibold">
+                        <a href="{% url 'asset_overview_page' a.id %}" class="overview-link text-dark">{{ a.name }}</a>
+                    </td>
+
+                    <td class="text-center">
+                        {{ a.purchase_date|date:"d.m.Y" }}
+                    </td>
+
+                    <td class="text-end">
+                        {{ a.purchase_price }} €
+                    </td>
+
+                    <td class="text-center fw-semibold">
+                        <a href="{% url 'receipt_overview_page' a.receipt_id %}" class="overview-link text-dark">#{{ a.receipt_id }}</a>
+                    </td>
+
+                    <td class="text-center">
+                        {% if a.asset_pool %}
+                            <a href="{% url 'asset_pool_overview_page' a.asset_pool.id %}" class="overview-link text-dark">
+                                {{ a.asset_pool.name }}
+                            </a>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+
+                    <td class="text-end">
+                        {% if a.asset_pool %}
+                            —
+                        {% else %}
+                            {{ a.book_value }} €
+                        {% endif %}
+                    </td>
+
+                    <td class="text-center">
+                        {% if a.is_gwg %}
+                            <span class="badge bg-info text-dark">GWG</span>
+                        {% endif %}
+                        {% if a.fully_depreciated and not a.asset_pool %}
+                            <span class="badge bg-secondary">Fully depreciated</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="text-end">
+
+                        <div class="btn-group">
+
+                            <button class="btn btn-sm btn-primary"
+                                    hx-get="{% url 'edit_asset_htmx' a.id %}"
+                                    hx-target="#modalContent"
+                                    hx-trigger="click"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modal">
+                                Edit
+                            </button>
+
+                            <button class="btn btn-sm btn-danger"
+                                    hx-delete="{% url 'delete_asset_htmx' a.id %}"
+                                    hx-confirm="Delete this asset?">
+                                Delete
+                            </button>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
+            {% empty %}
+
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-3">
+                        No assets found
+                    </td>
+                </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>

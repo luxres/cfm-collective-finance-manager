@@ -1,0 +1,41 @@
+{# COMPONENT: reusable fragment, {% include %}'d from more than one page. #}
+<div id="charts-empty-state" class="text-muted text-center py-5 d-none">
+    {{ charts_empty_message|default:"No data available yet." }}
+</div>
+
+<div id="charts-wrapper" class="row g-3">
+
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted">Total Income vs Expenses vs Net</h6>
+                <div style="position:relative; height:280px;">
+                    <canvas id="totalBarChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted">Daily Cash Flow &amp; Running Balance</h6>
+                <div style="position:relative; height:320px;">
+                    <canvas id="cashFlowChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted">Cumulative Balance Over Time</h6>
+                <div style="position:relative; height:280px;">
+                    <canvas id="netTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

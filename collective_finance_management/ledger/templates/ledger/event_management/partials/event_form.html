@@ -1,0 +1,76 @@
+{# PARTIAL: HTMX fragment for this feature's page only. #}
+<form
+    method="post"
+    {% if event %}
+      hx-post="{% url 'edit_event_htmx' event.id %}"
+    {% else %}
+      hx-post="{% url 'add_event_htmx' collective.id %}"
+    {% endif %}
+    hx-target="#modalContent"
+    hx-swap="innerHTML"
+    enctype="multipart/form-data">
+
+  {% csrf_token %}
+
+  <div class="modal-header">
+
+      {% if event %}
+        Edit Event #{{ event.id }} for {{ collective.name }}
+      {% else %}
+        Add Event for {{ collective.name }}
+      {% endif %}
+
+      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+  </div>
+
+  <div class="modal-body">
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">
+        {{ form.non_field_errors }}
+      </div>
+    {% endif %}
+
+    <div class="row g-3">
+
+      {% for field in form %}
+
+        <div class="col-12">
+
+          <label class="form-label">
+            {{ field.label }}
+          </label>
+
+          {{ field }}
+
+          {% if field.errors %}
+            <div class="text-danger small">
+              {{ field.errors|striptags }}
+            </div>
+          {% endif %}
+
+        </div>
+
+      {% endfor %}
+
+    </div>
+
+  </div>
+
+  <div class="modal-footer">
+
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+      Cancel
+    </button>
+
+    <button type="submit" class="btn btn-success">
+      {% if event %}
+        Save Changes #{{ event.id }}
+      {% else %}
+        Add Event
+      {% endif %}
+    </button>
+
+  </div>
+
+</form>

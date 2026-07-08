@@ -1,0 +1,34 @@
+{# PAGE: full document, reached by direct navigation. #}
+{% extends "base.html" %}
+
+{% block title %}Export Manager{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <h2 class="mb-4">📤 Export Manager</h2>
+
+    <div class="row">
+        {% for source in sources %}
+        <div class="col-md-6 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ source.label }}</h5>
+                    <p class="card-text text-muted flex-grow-1">{{ source.description }}</p>
+                    <a href="{% url 'exporter:source_export_page' source.key %}" class="btn btn-success align-self-start">
+                        Configure export
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-secondary">No export sources are registered yet.</div>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+{% endblock %}

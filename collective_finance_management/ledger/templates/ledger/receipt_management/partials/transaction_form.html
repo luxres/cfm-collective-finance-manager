@@ -1,0 +1,170 @@
+{# PARTIAL: HTMX fragment for this feature's page only. #}
+<form
+    method="post"
+    {% if transaction %}
+      hx-post="{% url 'edit_transaction_htmx' transaction.id %}"
+    {% else %}
+      hx-post="{% url 'add_transaction_htmx' receipt.id %}"
+    {% endif %}
+    hx-target="#modalContent"
+    hx-swap="innerHTML">
+
+  {% csrf_token %}
+
+  <div class="modal-header">
+      {% if transaction %}
+        Edit Transaction #{{ transaction.id }}
+      {% else %}
+        Add Transaction
+      {% endif %}
+
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+  </div>
+
+  <div class="modal-body">
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">
+        {{ form.non_field_errors }}
+      </div>
+    {% endif %}
+
+    <div class="row g-3">
+
+      <!-- DESCRIPTION -->
+      <div class="col-12">
+        <label class="form-label">Description</label>
+        {{ form.description }}
+      </div>
+
+      <div class="mt-3">
+        <label class="form-label">Date</label>
+        {{ form.date }}
+      </div>
+
+      <!-- ================= TRANSFER ================= -->
+      <div class="col-12">
+        <div class="row g-3 align-items-start">
+
+          <!-- FROM SIDE -->
+          <div class="col-md-4">
+              <div class="card border-0 bg-light p-3">
+
+                  <h6 class="text-muted mb-2">From</h6>
+
+                  <label class="form-label small">Account Holder</label>
+                  {{ form.from_holder }}
+
+                  <label class="form-label small mt-2">Account</label>
+                  {{ form.from_account }}
+
+              </div>
+          </div>
+
+          <!-- AMOUNT -->
+          <div class="col-md-4 text-center">
+            <div class="p-3 d-flex flex-column align-items-center">
+
+              <div class="mb-3 w-100">
+                <div class="d-flex align-items-center justify-content-center">
+                  <hr class="flex-grow-1">
+                  <i class="bi bi-arrow-right-circle-fill fs-1 text-success mx-3"></i>
+                  <hr class="flex-grow-1">
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Amount / €</label>
+                {{ form.amount }}
+              </div>
+
+              <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                  data-receipt-amount="{% if receipt %}{{ receipt.amount|floatformat:2 }}{% else %}{{ transaction.receipt.amount|floatformat:2 }}{% endif %}"
+                  onclick="document.getElementById('{{ form.amount.id_for_label }}').value = Math.abs(this.dataset.receiptAmount);">
+                  Use receipt amount
+              </button>
+            </div>
+          </div>
+
+          <!-- TO SIDE -->
+          <div class="col-md-4">
+              <div class="card border-0 bg-light p-3">
+
+                  <h6 class="text-muted mb-2">To</h6>
+
+                  <label class="form-label small">Account Holder</label>
+                  {{ form.to_holder }}
+
+                  <label class="form-label small mt-2">Account</label>
+                  {{ form.to_account }}
+
+              </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+      Cancel
+    </button>
+
+    <button type="submit" class="btn btn-success">
+      {% if transaction %}
+        Save Changes #{{ transaction.id }}
+      {% else %}
+        Add Transaction
+      {% endif %}
+    </button>
+  </div>
+
+</form>
+
+<script>
+  //reload the FinanceAccounts if the AccountHolder is selected in the TransactionForm modal
+  async function loadAccounts(holderId, targetSelectId) {
+      const select = document.getElementById(targetSelectId);
+
+      // reset state
+      select.innerHTML = `<option>Loading...</option>`;
+
+      if (!holderId) {
+          select.innerHTML = `<option value="">Select holder first</option>`;
+          return;
+      }
+
+      try {
+          const response = await fetch(`/ledger/api/finance-accounts-by-holder/${holderId}/`);
+          const data = await response.json();
+
+          select.innerHTML = ``;
+
+          if (data.accounts.length === 0) {
+              select.innerHTML = `<option value="">No accounts available</option>`;
+              return;
+          }
+
+          // build options
+          data.accounts.forEach(acc => {
+              const option = document.createElement("option");
+              option.value = acc.id;
+              option.textContent = `${acc.name} (${acc.type})`;
+              select.appendChild(option);
+          });
+
+          // auto-select first account
+          select.value = data.accounts[0].id;
+
+          select.dispatchEvent(new Event("change"));
+
+      } catch (err) {
+          select.innerHTML = `<option>Error loading accounts</option>`;
+          console.error(err);
+      }
+  }
+</script>

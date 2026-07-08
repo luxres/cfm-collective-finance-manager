@@ -1,0 +1,32 @@
+{# PARTIAL: HTMX fragment for this feature's page only. Recursive: the nested sub-category table below is the real, reused category_table_htmx (filtered by parent_id), so ITS OWN "Details" buttons load this same partial again for each child - no separate recursion logic needed here. #}
+<div>
+
+    <div class="mb-3">
+        <div class="fw-semibold small text-muted mb-1">Sub-categories</div>
+
+        <div id="cat-subcats-content-{{ category.id }}"
+             hx-get="{% url 'category_table_htmx' category.collective.id category.type %}?parent_id={{ category.id }}&table_id=cat-subcats-{{ category.id }}"
+             hx-trigger="load"
+             hx-target="this"
+             hx-swap="innerHTML">
+        </div>
+    </div>
+
+    <div>
+        <div class="fw-semibold small text-muted mb-1">
+            {% if category.type == "receipt" %}Receipts{% else %}Events{% endif %} on this category
+        </div>
+
+        <div id="cat-layer-content-{{ category.id }}"
+             {% if category.type == "receipt" %}
+                hx-get="{% url 'receipt_table_htmx' category.collective.id %}?category_id={{ category.id }}&table_id=cat-receipts-{{ category.id }}"
+             {% else %}
+                hx-get="{% url 'event_table_htmx' category.collective.id %}?category_id={{ category.id }}&table_id=cat-events-{{ category.id }}"
+             {% endif %}
+             hx-trigger="load"
+             hx-target="this"
+             hx-swap="innerHTML">
+        </div>
+    </div>
+
+</div>

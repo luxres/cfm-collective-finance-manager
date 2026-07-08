@@ -1,0 +1,55 @@
+{# PAGE: full document, reached by direct navigation. #}
+{% extends "base.html" %}
+
+{% block title %}
+Event Overview — {{ event.name }}
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-3">
+    <button class="btn btn-sm btn-link text-decoration-none text-secondary ps-0 mb-2"
+            onclick="history.back()">
+        <i class="bi bi-arrow-left"></i> Back
+    </button>
+
+    {% include "ledger/components/overview_header.html" %}
+
+    <ul class="nav nav-pills mb-3">
+        <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tab-receipts">Receipts</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-charts">Charts</button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+
+        <div class="tab-pane fade show active" id="tab-receipts">
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <div id="receipt-table"
+                         hx-get="{% url 'receipt_table_htmx' event.collective.id %}?event_id={{ event.id }}"
+                         hx-trigger="load, receiptsUpdated from:body"
+                         hx-target="this"
+                         hx-swap="innerHTML">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="tab-charts">
+            {% include "ledger/components/charts_tab.html" %}
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+{% include "ledger/components/charts_js.html" %}
+{% endblock %}

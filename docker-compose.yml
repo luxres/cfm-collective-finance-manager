@@ -1,0 +1,39 @@
+services:
+  django:
+    build: .
+
+    env_file:
+      - stack.env
+
+    ports:
+      - "8000:8000"
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    restart: unless-stopped
+
+    # Uncomment for local development
+    # volumes:
+    #   - .:/app
+
+  db:
+    image: postgres:16
+
+    env_file:
+      - stack.env
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

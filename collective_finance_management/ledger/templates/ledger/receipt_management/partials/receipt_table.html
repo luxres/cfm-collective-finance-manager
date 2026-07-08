@@ -1,0 +1,321 @@
+{# PARTIAL: HTMX fragment for this feature's page only. #}
+
+<div id="{{ table_id }}" class="card shadow-sm">
+
+    <div class="card-header d-flex justify-content-between align-items-center">
+
+        <strong>Receipts</strong>
+        <!-- <strong>Receipts — {{ collective.name }}</strong> -->
+
+        <button class="btn btn-sm btn-success"
+                hx-get="{% url 'add_receipt_htmx' collective.id%}"
+                hx-target="#modalContent"
+                hx-trigger="click"
+                data-bs-toggle="modal"
+                data-bs-target="#modal">
+            + Receipt
+        </button>
+    </div>
+
+    <div class="card-body p-0">
+
+        <table class="table mb-0 align-middle">
+
+            <thead>
+                <tr>
+
+                    <!-- ID -->
+                    <th class="text-center">
+                        <a class="text-dark overview-link"
+                        hx-get="{{ sort_links.id }}"
+                        hx-target="#{{ table_id }}"
+                        hx-swap="outerHTML">
+                            Receipt ID
+                            {% if current_sort == "id" %}▲{% elif current_sort == "-id" %}▼{% endif %}
+                        </a>
+                    </th>
+
+                    <!-- AMOUNT -->
+                    <th class="text-end">
+                        <a class="text-dark overview-link"
+                        hx-get="{{ sort_links.amount }}"
+                        hx-target="#{{ table_id }}"
+                        hx-swap="outerHTML">
+                            Amount
+                            {% if current_sort == "amount" %}▲{% elif current_sort == "-amount" %}▼{% endif %}
+                        </a>
+                    </th>
+                    <th class="text-center">Note</th>
+
+                    <!-- CATEGORY -->
+                    <th class="text-center">
+                        <a class="text-dark overview-link"
+                        hx-get="{{ sort_links.category }}"
+                        hx-target="#{{ table_id }}"
+                        hx-swap="outerHTML">
+                            Category
+                            {% if current_sort == "category" %}▲{% elif current_sort == "-category" %}▼{% endif %}
+                        </a>
+                    </th>
+
+                    <!-- EVENT -->
+                    <th class="text-center">
+                        <a class="text-dark overview-link"
+                        hx-get="{{ sort_links.event }}"
+                        hx-target="#{{ table_id }}"
+                        hx-swap="outerHTML">
+                            Event
+                            {% if current_sort == "event" %}▲{% elif current_sort == "-event" %}▼{% endif %}
+                        </a>
+                    </th>
+
+                    <!-- COUNTERPARTY -->
+                    <th class="text-center">
+                        <a class="text-dark overview-link"
+                        hx-get="{{ sort_links.counterparty }}"
+                        hx-target="#{{ table_id }}"
+                        hx-swap="outerHTML">
+                            Counterparty
+                            {% if current_sort == "counterparty" %}▲{% elif current_sort == "-counterparty" %}▼{% endif %}
+                        </a>
+                    </th>
+
+                    <!-- RESPONSIBLE -->
+                    <th class="text-center">
+                        <a class="text-dark overview-link"
+                        hx-get="{{ sort_links.responsible_holder }}"
+                        hx-target="#{{ table_id }}"
+                        hx-swap="outerHTML">
+                            Responsible
+                            {% if current_sort == "responsible_holder" %}▲{% elif current_sort == "-responsible_holder" %}▼{% endif %}
+                        </a>
+                    </th>
+
+                    <!-- DATE -->
+                    <th class="text-center">
+                        <a class="text-dark overview-link"
+                        hx-get="{{ sort_links.date }}"
+                        hx-target="#{{ table_id }}"
+                        hx-swap="outerHTML">
+                            Date
+                            {% if current_sort == "date" %}▲{% elif current_sort == "-date" %}▼{% endif %}
+                        </a>
+                    </th>
+
+                    <!-- DIRECTION -->
+                    <th class="text-center">
+                        <a class="text-dark overview-link"
+                        hx-get="{{ sort_links.direction }}"
+                        hx-target="#{{ table_id }}"
+                        hx-swap="outerHTML">
+                            Direction
+                            {% if current_sort == "direction" %}▲{% elif current_sort == "-direction" %}▼{% endif %}
+                        </a>
+                    </th>
+
+                    <!-- DOCUMENT STATUS -->
+                    <th class="text-center">
+                        <a class="text-dark overview-link"
+                        hx-get="{{ sort_links.document_status }}"
+                        hx-target="#{{ table_id }}"
+                        hx-swap="outerHTML">
+                            Document
+                            {% if current_sort == "document_status" %}▲{% elif current_sort == "-document_status" %}▼{% endif %}
+                        </a>
+                    </th>
+
+                    <!-- TAX CATEGORY -->
+                    <th class="text-center">
+                        <a class="text-dark overview-link"
+                        hx-get="{{ sort_links.tax_category }}"
+                        hx-target="#{{ table_id }}"
+                        hx-swap="outerHTML">
+                            Tax
+                            {% if current_sort == "tax_category" %}▲{% elif current_sort == "-tax_category" %}▼{% endif %}
+                        </a>
+                    </th>
+
+                    <!-- ADDRESS STATUS -->
+                    <th class="text-center">
+                        <a class="text-dark overview-link"
+                        hx-get="{{ sort_links.address_status }}"
+                        hx-target="#{{ table_id }}"
+                        hx-swap="outerHTML">
+                            Address
+                            {% if current_sort == "address_status" %}▲{% elif current_sort == "-address_status" %}▼{% endif %}
+                        </a>
+                    </th>
+
+
+                    <!-- TRANSACTION STATUS (not sortable) -->
+                    <th class="text-center">
+                        Status
+                    </th>
+
+                    <!-- ACTIONS -->
+                    <th></th>
+
+                </tr>
+                </thead>
+
+            <tbody>
+
+                {% for r in receipts %}
+
+                <tr>
+                    <td class="text-center">
+                        <a href="{% url 'receipt_overview_page' r.id %}" class="overview-link">#{{ r.id }}</a>
+                    </td>
+                    <td class="text-end" style="width: 100px;">{{ r.amount }} €</td>
+
+                    <td class="text-center" style="width: 100px;">
+                        {% if r.note %}
+                            {{ r.note }}
+                        {% else %}
+                            -
+                        </td>
+                        {% endif %}
+                    <td class="text-center">
+                        {% if r.category.name %}
+                        <a href="{% url 'category_overview_page' r.category.id %}" class="overview-link text-center">{{ r.category.name }}</a>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    
+                    <td class="text-center">
+                        {% if r.event %}
+                            <a href="{% url 'event_overview_page' r.event.id %}" class="overview-link">{{ r.event.name }}</a>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <td class="text-center">
+                        {% if r.counterparty %}
+                            {{ r.counterparty.name }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+
+                    <td class="text-center">
+                        {% if r.responsible_holder %}
+                            {{ r.responsible_holder.name }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+
+                    <td class="text-center">
+                        {% if r.date %}
+                            {{ r.date|date:"Y-m-d" }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+
+                    <td class="text-center">
+                        {% if r.direction == "in" %}
+                            <span class="badge bg-success">{{ r.direction }}</span>
+                        {% elif r.direction == "out"  %}
+                            <span class="badge bg-danger">{{ r.direction }}</span>
+                        {% elif r.direction == "intern"  %}
+                            <span class="badge bg-secondary">intern</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="text-center">
+                        {% if r.document_status == "attached" %}
+                            <span class="badge bg-success">{{ r.document_status }}</span>
+                        {% elif r.document_status == "pending" %}
+                            <span class="badge bg-warning text-dark">{{ r.document_status }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary">not existent</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="text-center">
+                        {% if r.tax_category == "ideel"%}
+                            <span class="badge badge-blue0">{{ r.tax_category }}</span>
+                        {% elif r.tax_category == "vermoegen"%}
+                            <span class="badge badge-blue1">{{ r.tax_category }}</span>
+                        {% elif r.tax_category == "zweck"%}
+                            <span class="badge badge-blue2">{{ r.tax_category }}</span>
+                        {% elif r.tax_category == "wirtschaftlich"%}
+                            <span class="badge badge-blue3">{{ r.tax_category }}</span>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if r.address_status == "ok"%}
+                            <span class="badge bg-success">ok</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">incorrect</span>
+                        {% endif %}
+                    </td>
+
+
+
+                    <td class="text-center">
+                        {% if r.is_closed %}
+                            <span class="badge bg-success">
+                                closed
+                            </span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">
+                                open
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <td class="text-center">
+                        <div class="btn-group">
+
+                            <!-- DETAILS BUTTON -->
+                            <button class="btn btn-sm btn-outline-secondary"
+                                    hx-get="{% url 'receipt_details_htmx' r.id %}"
+                                    hx-target="#receipt-details-{{ r.id }} .receipt-details-content"
+                                    hx-swap="innerHTML"
+                                    hx-trigger="click"
+                                    hx-on::after-request="
+                                        let row = document.getElementById('receipt-details-{{ r.id }}');
+                                        row.classList.toggle('d-none');
+                                    ">
+                                Details
+                            </button>
+
+                            <button class="btn btn-sm btn-primary"
+                                    hx-get="{% url 'edit_receipt_htmx' r.id %}"
+                                    hx-target="#modalContent"
+                                    hx-trigger="click"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modal">
+                                Edit
+                            </button>
+
+                        </div>
+                    </td>
+                </tr>
+                
+
+                <tr id="receipt-details-{{ r.id }}" class="d-none">
+                    <td colspan="14" class="p-0">
+                        <div class="receipt-details-content px-3"></div>
+                    </td>
+                </tr>
+
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-3">
+                        No receipts found
+                    </td>
+                </tr>
+                {% endfor %}
+
+                </tbody>
+        </table>
+
+    </div>
+</div>

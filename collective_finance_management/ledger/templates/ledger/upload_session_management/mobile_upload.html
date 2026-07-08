@@ -1,0 +1,72 @@
+{# PAGE: full document, reached by direct navigation. #}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Upload Receipt</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-6">
+
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+
+                    <h3 class="mb-3">Upload Receipt</h3>
+
+                    <p class="text-muted">
+                        Take a photo of your receipt or choose an existing file.
+                    </p>
+
+                    <form
+                        action="{% url 'upload_session_file_htmx' upload_session.token %}"
+                        method="post"
+                        enctype="multipart/form-data">
+
+                        {% csrf_token %}
+
+                        <div class="d-grid gap-3">
+
+                            <label class="btn btn-primary btn-lg">
+                                📷 Take Photo
+                                <input
+                                    type="file"
+                                    name="file"
+                                    accept="image/*"
+                                    capture="environment"
+                                    class="d-none"
+                                    onchange="this.form.submit()">
+                            </label>
+
+                            <label class="btn btn-outline-secondary btn-lg">
+                                📁 Choose File
+                                <input
+                                    type="file"
+                                    name="file"
+                                    accept="image/*,application/pdf"
+                                    class="d-none"
+                                    onchange="this.form.submit()">
+                            </label>
+
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+```

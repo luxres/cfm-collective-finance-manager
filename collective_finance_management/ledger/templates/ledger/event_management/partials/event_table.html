@@ -1,0 +1,193 @@
+{# PARTIAL: HTMX fragment for this feature's page only. #}
+<div id="{{ table_id }}" class="card shadow-sm">
+
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <strong>Events</strong>
+
+        <button class="btn btn-sm btn-success"
+                hx-get="{% url 'add_event_htmx' collective.id %}"
+                hx-target="#modalContent"
+                hx-trigger="click"
+                data-bs-toggle="modal"
+                data-bs-target="#modal">
+            + Event
+        </button>
+    </div>
+
+    <div class="card-body p-0">
+
+        <table class="table mb-0 align-middle">
+
+            <thead>
+                <tr>
+
+                    <!-- ID -->
+                    <th class="text-center">
+                        <a class="text-dark overview-link"
+                           hx-get="{{ sort_links.id }}"
+                           hx-target="#{{ table_id }}"
+                           hx-swap="outerHTML">
+                            Event ID
+                            {% if current_sort == "id" %}▲{% elif current_sort == "-id" %}▼{% endif %}
+                        </a>
+                    </th>
+
+                    <!-- NAME -->
+                    <th class="text-center">
+                        <a class="text-dark overview-link"
+                           hx-get="{{ sort_links.name }}"
+                           hx-target="#{{ table_id }}"
+                           hx-swap="outerHTML">
+                            Name
+                            {% if current_sort == "name" %}▲{% elif current_sort == "-name" %}▼{% endif %}
+                        </a>
+                    </th>
+
+                    <!-- CATEGORY -->
+                    <th class="text-center">Category</th>
+
+                    <!-- START -->
+                    <th class="text-center">
+                        <a class="text-dark overview-link"
+                           hx-get="{{ sort_links.start_date }}"
+                           hx-target="#{{ table_id }}"
+                           hx-swap="outerHTML">
+                            Start
+                            {% if current_sort == "start_date" %}▲{% elif current_sort == "-start_date" %}▼{% endif %}
+                        </a>
+                    </th>
+
+                    <!-- END -->
+                    <th class="text-center">
+                        <a class="text-dark overview-link"
+                           hx-get="{{ sort_links.end_date }}"
+                           hx-target="#{{ table_id }}"
+                           hx-swap="outerHTML">
+                            End
+                            {% if current_sort == "end_date" %}▲{% elif current_sort == "-end_date" %}▼{% endif %}
+                        </a>
+                    </th>
+
+                    <!-- RESPONSIBLE -->
+                    <th class="text-center">Responsible</th>
+
+                    <!-- INCOMING -->
+                    <th class="text-end">Incoming</th>
+
+                    <!-- OUTGOING -->
+                    <th class="text-end">Outgoing</th>
+
+                    <!-- BALANCE -->
+                    <th class="text-end">Balance</th>
+
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for e in events %}
+
+                <tr>
+                    <td class="text-center fw-bold">
+                        <a href="{% url 'event_overview_page' e.id %}" class="overview-link text-dark">#{{ e.id }}</a>
+                    </td>
+
+                    <td class="text-center">
+                        <a href="{% url 'event_overview_page' e.id %}" class="overview-link text-dark">{{ e.name }}</a>
+                    </td>
+
+                    <td class="text-center">
+                        {{ e.category.name|default:"-" }}
+                    </td>
+
+                    <td class="text-center">
+                        {{ e.start_date|date:"Y-m-d"|default:"—" }}
+                    </td>
+
+                    <td class="text-center">
+                        {{ e.end_date|date:"Y-m-d"|default:"—" }}
+                    </td>
+
+                    <td class="text-center">
+                        {{ e.responsible_holder.name|default:"—" }}
+                    </td>
+
+                    <td class="text-end">
+                        {{ e.incoming_total|default:0|floatformat:2 }} €
+                    </td>
+
+                    <td class="text-end">
+                        {{ e.outgoing_total|default:0|floatformat:2 }} €
+                    </td>
+
+                    <td class="text-end">
+                        {% with balance=e.balance_total %}
+                            {% if balance >= 0 %}
+                                <span class="text-success fw-bold">{{ balance|floatformat:2 }} €</span>
+                            {% else %}
+                                <span class="text-danger fw-bold">{{ balance|floatformat:2 }} €</span>
+                            {% endif %}
+                        {% endwith %}
+                    </td>
+
+                    <td class="text-center">
+                        <div class="btn-group">
+
+                            <button class="btn btn-sm btn-outline-secondary"
+                                    hx-get="{% url 'receipt_table_htmx' collective.id %}?event_id={{ e.id }}&table_id=event-receipts-{{ e.id }}"
+                                    hx-target="#event-details-{{ e.id }} .event-details-content"
+                                    hx-swap="innerHTML"
+                                    hx-on::after-request="document.getElementById('event-details-{{ e.id }}').classList.toggle('d-none');">
+                                Details
+                            </button>
+
+                            <button class="btn btn-sm btn-primary"
+                                    hx-get="{% url 'edit_event_htmx' e.id %}"
+                                    hx-target="#modalContent"
+                                    hx-trigger="click"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modal">
+                                Edit
+                            </button>
+
+                            {% if e.can_delete %}
+                                <button class="btn btn-sm btn-danger"
+                                        hx-delete="{% url 'delete_event_htmx' e.id %}"
+                                        hx-confirm="Delete this event?">
+                                    Delete
+                                </button>
+                            {% else %}
+                                <span title="Cannot delete because receipts exist">
+                                    <button class="btn btn-sm btn-outline-secondary" disabled>
+                                        Delete
+                                    </button>
+                                </span>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+
+
+                <tr id="event-details-{{ e.id }}" class="d-none">
+                    <td colspan="10" class="p-0">
+                        <div class="event-details-content px-3 py-2 border-top"></div>
+                    </td>
+                </tr>
+
+                {% empty %}
+
+                <tr>
+                    <td colspan="10" class="text-center text-muted py-3">
+                        No events found
+                    </td>
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+</div>

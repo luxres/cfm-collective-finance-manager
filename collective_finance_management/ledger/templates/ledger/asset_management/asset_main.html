@@ -1,0 +1,100 @@
+{# PAGE: full document, reached by direct navigation. #}
+{% extends "base.html" %}
+
+{% block title %}Asset Management{% endblock %}
+
+{% block content %}
+
+<h2 class="mb-4">Asset Management</h2>
+
+{% include "ledger/components/collective_switcher.html" %}
+
+<!-- ================= TABS ================= -->
+<ul class="nav nav-pills mb-3" id="asset-tabs">
+
+    <li class="nav-item">
+        <button class="nav-link active"
+                data-bs-toggle="pill"
+                data-bs-target="#tab-assets"
+                data-type="assets"
+                hx-get="{% url 'asset_table_htmx' active_collective.id %}"
+                hx-target="#asset-content"
+                hx-swap="innerHTML">
+            Assets
+        </button>
+    </li>
+
+    <li class="nav-item">
+        <button class="nav-link"
+                data-bs-toggle="pill"
+                data-bs-target="#tab-pools"
+                data-type="pools"
+                hx-get="{% url 'asset_pool_table_htmx' active_collective.id %}"
+                hx-target="#asset-content"
+                hx-swap="innerHTML">
+            Asset Pools
+        </button>
+    </li>
+
+</ul>
+
+
+<!-- ================= TABLE ================= -->
+
+<div id="asset-content"
+     hx-get="{% url 'asset_table_htmx' active_collective.id %}"
+     hx-trigger="load"
+     hx-swap="innerHTML">
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+<script>
+
+const assetTableUrl = "{% url 'asset_table_htmx' active_collective.id %}";
+const assetPoolTableUrl = "{% url 'asset_pool_table_htmx' active_collective.id %}";
+
+let currentAssetTab = "assets";
+
+document.addEventListener("shown.bs.tab", function(event){
+
+    const type = event.target.getAttribute("data-type");
+
+    if(!type) return;
+
+    currentAssetTab = type;
+
+    const url = (currentAssetTab === "assets") ? assetTableUrl : assetPoolTableUrl;
+
+    htmx.ajax("GET", url, {
+        target: "#asset-content",
+        swap: "innerHTML"
+    });
+
+});
+
+
+document.body.addEventListener("modalClose", function(){
+
+    const url = (currentAssetTab === "assets") ? assetTableUrl : assetPoolTableUrl;
+
+    htmx.ajax("GET", url, {
+        target:"#asset-content",
+        swap:"innerHTML"
+    });
+
+    const modalEl = document.getElementById("modal");
+    const modal = bootstrap.Modal.getInstance(modalEl);
+
+    if(modal){
+        modal.hide();
+    }
+
+});
+
+</script>
+
+{% endblock %}

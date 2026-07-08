@@ -1,0 +1,63 @@
+{# PAGE: full document, reached by direct navigation. #}
+{% extends "base.html" %}
+
+{% block title %}
+Asset Overview — {{ asset.name }}
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-3">
+
+    <button class="btn btn-sm btn-link text-decoration-none text-secondary ps-0 mb-2"
+            onclick="history.back()">
+        <i class="bi bi-arrow-left"></i> Back
+    </button>
+
+    {% include "ledger/components/overview_header.html" %}
+
+    <div class="card shadow-sm">
+        <div class="card-header">
+            <strong>Depreciation Schedule</strong>
+        </div>
+        <div class="card-body p-0">
+
+            {% if asset.asset_pool %}
+                <div class="text-muted text-center py-4">
+                    This asset is depreciated as part of the
+                    <a href="{% url 'asset_pool_overview_page' asset.asset_pool.id %}">{{ asset.asset_pool.name }}</a>
+                    pool — see that pool's overview for its schedule.
+                </div>
+            {% else %}
+                <table class="table mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th class="text-center">Year</th>
+                            <th class="text-end">Annual Depreciation</th>
+                            <th class="text-end">Accumulated Depreciation</th>
+                            <th class="text-end">Book Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in schedule %}
+                            <tr>
+                                <td class="text-center">{{ row.year }}</td>
+                                <td class="text-end">{{ row.annual_depreciation }} €</td>
+                                <td class="text-end">{{ row.accumulated_depreciation }} €</td>
+                                <td class="text-end fw-bold">{{ row.book_value }} €</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">No schedule available</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

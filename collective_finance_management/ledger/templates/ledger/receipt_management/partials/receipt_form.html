@@ -1,0 +1,265 @@
+{# PARTIAL: HTMX fragment for this feature's page only. #}
+<form
+    method="post"
+    {% if receipt %}
+        hx-post="{% url 'edit_receipt_htmx' receipt.id %}"
+    {% else %}
+        hx-post="{% url 'add_receipt_htmx' collective.id %}?upload_session_id={{ upload_session.id }}"
+    {% endif %}
+    hx-target="#modalContent"
+    hx-swap="innerHTML"
+    enctype="multipart/form-data">
+
+    {% csrf_token %}
+
+    <div class="modal-header">
+        <h5 class="modal-title">
+            {% if receipt %}
+                Edit Receipt #{{ receipt.id }} for {{ collective.name }}
+            {% else %}
+                Add Receipt for {{ collective.name }}
+            {% endif %}
+        </h5>
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"></button>
+    </div>
+
+    <div class="modal-body">
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <!-- ========================================================= -->
+        <!-- FINANCIAL INFORMATION -->
+        <!-- ========================================================= -->
+        <fieldset class="border rounded p-3 mb-4">
+            <legend class="float-none w-auto px-2 fs-6 fw-bold">
+                Financial Information
+            </legend>
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    {{ form.date.label_tag }}
+                    {{ form.date }}
+                    {{ form.date.errors }}
+                </div>
+
+                <div class="col-md-6">
+                    {{ form.amount.label_tag }}
+                    {{ form.amount }}
+                    {{ form.amount.errors }}
+                </div>
+
+                <div class="col-md-6">
+                    {{ form.direction.label_tag }}
+                    {{ form.direction }}
+                    {{ form.direction.errors }}
+                </div>
+
+                <div class="col-md-6">
+                    {{ form.counterparty.label_tag }}
+                    {{ form.counterparty }}
+                    {{ form.counterparty.errors }}
+                </div>
+
+                <div class="col-md-6">
+                    {{ form.responsible_holder.label_tag }}
+                    {{ form.responsible_holder }}
+                    {{ form.responsible_holder.errors }}
+                </div>
+
+                <div class="col-md-6">
+                    {{ form.event.label_tag }}
+                    {{ form.event }}
+                    {{ form.event.errors }}
+                </div>
+                <div class="col-md-6">
+                    {{ form.note.label_tag }}
+                    {{ form.note }}
+                    {{ form.note.errors }}
+                </div>
+
+            </div>
+        </fieldset>
+
+        <!-- ========================================================= -->
+        <!-- CATEGORIES -->
+        <!-- ========================================================= -->
+        <fieldset class="border rounded p-3 mb-4">
+            <legend class="float-none w-auto px-2 fs-6 fw-bold">
+                Categories
+            </legend>
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    {{ form.category.label_tag }}
+                    {{ form.category }}
+                    {{ form.category.errors }}
+                </div>
+
+                <div class="col-md-6">
+                    {{ form.tax_category.label_tag }}
+                    {{ form.tax_category }}
+                    {{ form.tax_category.errors }}
+                </div>
+
+            </div>
+        </fieldset>
+
+        <!-- ========================================================= -->
+        <!-- DOCUMENT STATUS -->
+        <!-- ========================================================= -->
+        <fieldset class="border rounded p-3 mb-4">
+            <legend class="float-none w-auto px-2 fs-6 fw-bold">
+                Document Status
+            </legend>
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    {{ form.address_status.label_tag }}
+                    {{ form.address_status }}
+                    {{ form.address_status.errors }}
+                </div>
+
+                <div class="col-md-6">
+                    {{ form.document_status.label_tag }}
+                    {{ form.document_status }}
+                    {{ form.document_status.errors }}
+                </div>
+                
+                <!-- FILE STATUS -->
+                <div id="upload-status-wrapper"
+                    hx-get="{% url 'upload_session_status_htmx' upload_session.token %}"
+                    hx-trigger="load, every 2s"
+                    hx-target="#upload-status-wrapper"
+                    hx-swap="innerHTML">
+
+                    <!-- initial fallback content -->
+                    <div class="text-muted">
+                        Loading...
+                    </div>
+
+                </div>
+
+            </div>
+        </fieldset>
+
+        <!-- ========================================================= -->
+        <!-- UPLOAD SECTION -->
+        <!-- ========================================================= -->
+        <fieldset class="border rounded p-3 mb-4 d-none" id="upload-section">
+
+            <legend class="float-none w-auto px-2 fs-6 fw-bold">
+                Receipt Upload
+            </legend>
+
+            {% if upload_session %}
+
+                <input type="hidden" name="upload_session_token" value="{{ upload_session.token }}">
+
+                <div class="d-flex flex-column gap-3">
+
+                    <!-- ================= PC UPLOAD ================= -->
+                    <div class="border rounded p-3">
+
+                        <div class="border-bottom pb-2 mb-3 fw-semibold text-muted small">
+                            Upload from computer
+                        </div>
+
+                        <input type="file"
+                            class="form-control"
+                            name="file"
+                            hx-post="{% url 'upload_session_file_htmx' upload_session.token %}"
+                            hx-encoding="multipart/form-data"
+                            hx-target="#upload-status-wrapper"
+                            hx-swap="innerHTML">
+
+                        <div class="small text-muted mt-2">
+                            Select a file from your device.
+                        </div>
+
+                    </div>
+
+                    <!-- ================= MOBILE UPLOAD ================= -->
+                    <div class="border rounded p-3 text-center">
+
+                        <div class="border-bottom pb-2 mb-3 fw-semibold text-muted small text-start">
+                            Upload from phone
+                        </div>
+
+                        <img
+                            src="{% url 'upload_session_qr_htmx' upload_session.token %}"
+                            alt="Upload QR Code"
+                            class="img-fluid"
+                            style="max-width:220px">
+
+                        <div class="small text-muted mt-2">
+                            Scan this QR code to open the upload page on your phone.
+                        </div>
+
+                    </div>
+
+                </div>
+
+            {% else %}
+                <div class="text-muted">
+                    Upload session not available.
+                </div>
+            {% endif %}
+
+        </fieldset>
+    </div>
+
+    <div class="modal-footer">
+
+        <button type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal">
+            Cancel
+        </button>
+
+        <button type="submit"
+                class="btn btn-success">
+            {% if receipt %}
+                Save Changes #{{ receipt.id }}
+            {% else %}
+                Add Receipt
+            {% endif %}
+        </button>
+
+    </div>
+
+</form>
+
+<script>
+(function () {
+
+    const status = document.getElementById("id_document_status");
+    const uploadSection = document.getElementById("upload-section");
+
+    function updateUploadVisibility() {
+        if (!status || !uploadSection) return;
+
+        const show = status.value === "attached";
+
+        uploadSection.classList.toggle("d-none", !show);
+    }
+
+    status.addEventListener("change", updateUploadVisibility);
+    updateUploadVisibility();
+
+})();
+
+//stop polling when modal is closed by removing the file status container
+document.getElementById("modal").addEventListener("hidden.bs.modal", function () {
+    document.getElementById("upload-status-wrapper")?.remove();
+});
+</script>

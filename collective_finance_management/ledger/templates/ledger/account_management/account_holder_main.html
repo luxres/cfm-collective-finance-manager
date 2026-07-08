@@ -1,0 +1,138 @@
+{# PAGE: full document, reached by direct navigation. #}
+{% extends "base.html" %}
+
+{% block title %}
+Account Manager
+{% endblock %}
+
+{% block content %}
+
+<h2 class="mb-4">Account Management</h2>
+
+<!-- ================= FILTER BAR ================= -->
+<div class="container-fluid px-0">
+    <div class="card mb-4 shadow-sm p-3 w-100">
+        <div class="row g-5">
+
+            <!-- HOLDER TYPE -->
+            <div class="col-md-4">
+                <label class="form-label">Account Holder Type</label>
+                <select id="holder-type" class="form-select">
+                    <option value="">Select type</option>
+                    <option value="personal">Personal</option>
+                    <option value="external">External</option>
+                    <option value="collective">Collective</option>
+                    <option value="user">User</option>
+                </select>
+            </div>
+
+            <!-- HOLDER -->
+            <div class="col-md-4">
+                <label class="form-label">Account Holder</label>
+                <select id="holder-select" class="form-select">
+                    <option value="">Select holder</option>
+                </select>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ================= ACCOUNTS CONTAINER ================= -->
+<div id="account-container">
+    <div class="text-muted">Select an account holder to view accounts</div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+
+<script>
+const holderTypeSelect = document.getElementById("holder-type");
+const holderSelect = document.getElementById("holder-select");
+const container = document.getElementById("account-container");
+
+// ===============================
+// STATE HELPERS
+// ===============================
+function resetAccounts() {
+    container.innerHTML = `<div class="text-muted">Select an account holder</div>`;
+}
+
+// ===============================
+// 1. LOAD HOLDERS BY TYPE (JS)
+// ===============================
+holderTypeSelect.addEventListener("change", async function () {
+
+    const type = this.value;
+
+    holderSelect.innerHTML = `<option>Loading...</option>`;
+    resetAccounts();
+
+    if (!type) {
+        holderSelect.innerHTML = `<option value="">Select holder</option>`;
+        return;
+    }
+
+    try {
+        const res = await fetch(`/ledger/api/finance-account-holders-by-type/?type=${encodeURIComponent(type)}`);
+        if (!res.ok) throw new Error("Failed to load holders");
+
+        const data = await res.json();
+
+        holderSelect.innerHTML = `<option value="">Select holder</option>`;
+
+        data.holders.forEach(h => {
+            const opt = document.createElement("option");
+            opt.value = h.id;
+            opt.textContent = h.name;
+            holderSelect.appendChild(opt);
+        });
+
+    } catch (err) {
+        console.error(err);
+        holderSelect.innerHTML = `<option value="">Error loading holders</option>`;
+    }
+});
+
+
+// ===============================
+// 2. LOAD ACCOUNTS BY HOLDER (JS → HTMX)
+// ===============================
+holderSelect.addEventListener("change", function () {
+
+    const holderId = this.value;
+
+    resetAccounts();
+
+    if (!holderId) return;
+
+    const accountsByHolderUrlTemplate = "{% url 'accounts_by_holder_htmx' 0 %}";
+
+    htmx.ajax("GET",
+        accountsByHolderUrlTemplate.replace("0", holderId),
+        {
+            target: "#account-container",
+            swap: "innerHTML"
+        }
+    );
+});
+
+// close modal if htmx sends a modalClose response
+document.body.addEventListener("modalClose", function () {
+
+    const modalEl = document.getElementById("modal");
+
+    const modal = bootstrap.Modal.getInstance(modalEl);
+
+    if (modal) {
+        modal.hide();
+    }
+    // refresh accounts
+    document.querySelector("#holder-select").dispatchEvent(new Event("change"));
+
+});
+
+</script>
+
+{% endblock %}

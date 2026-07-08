@@ -1,0 +1,123 @@
+{# PAGE: full document, reached by direct navigation. Standalone (not extending base.html) so it stays a lightweight, installable home-screen app rather than pulling in the desktop shell. #}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+    <title>Add Receipt</title>
+
+    <!-- PWA: installable to the home screen -->
+    <link rel="manifest" href="{% url 'mobile_manifest_json' %}">
+    <meta name="theme-color" content="#198754">
+
+    <!-- iOS home-screen support (Safari ignores the manifest for some of this) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Add Receipt">
+    <link rel="apple-touch-icon" href="{% url 'mobile_pwa_icon' %}">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css">
+
+    <style>
+        body {
+            padding-bottom: env(safe-area-inset-bottom, 0);
+            padding-top: env(safe-area-inset-top, 0);
+            background: #f8f9fa;
+        }
+        .quick-add-wrap {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        /* Big, thumb-friendly controls - this page only ever gets used on a phone. */
+        .form-control-lg, .form-select-lg {
+            font-size: 1.15rem;
+        }
+        .btn-save {
+            font-size: 1.25rem;
+            padding: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quick-add-wrap">
+
+    <h4 class="mb-3 text-center">🧾 Add Receipt</h4>
+
+    <!-- ================= COLLECTIVE SWITCHER ================= -->
+    <form method="GET" class="mb-3">
+        <label class="form-label small text-muted mb-1">Collective</label>
+        <select name="collective"
+                class="form-select form-select-lg"
+                onchange="this.form.submit()">
+            {% for c in collectives %}
+                <option value="{{ c.id }}" {% if active_collective and c.id == active_collective.id %}selected{% endif %}>
+                    {{ c.name }}
+                </option>
+            {% endfor %}
+        </select>
+    </form>
+
+    {% if not active_collective %}
+        <div class="alert alert-warning">
+            You don't have access to any collective yet.
+        </div>
+    {% else %}
+
+        {% if saved_receipt %}
+            <div class="alert alert-success d-flex justify-content-between align-items-center">
+                <span>✅ Receipt #{{ saved_receipt.id }} saved.</span>
+            </div>
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data" class="card shadow-sm">
+            {% csrf_token %}
+            <div class="card-body d-flex flex-column gap-3">
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger mb-0">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                <div>
+                    {{ form.direction.label_tag }}
+                    {{ form.direction }}
+                    {{ form.direction.errors }}
+                </div>
+
+                <div>
+                    {{ form.amount.label_tag }}
+                    {{ form.amount }}
+                    {{ form.amount.errors }}
+                </div>
+
+                <div>
+                    {{ form.date.label_tag }}
+                    {{ form.date }}
+                    {{ form.date.errors }}
+                </div>
+
+                <div>
+                    {{ form.photo.label_tag }}
+                    {{ form.photo }}
+                    <div class="form-text">Opens your camera directly.</div>
+                    {{ form.photo.errors }}
+                </div>
+
+                <button type="submit" class="btn btn-success btn-save mt-2">
+                    Save Receipt
+                </button>
+
+                <div class="text-muted small text-center">
+                    Category, event, and tax sphere can be filled in later on desktop.
+                </div>
+
+            </div>
+        </form>
+
+    {% endif %}
+
+</div>
+
+</body>
+</html>

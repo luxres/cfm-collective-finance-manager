@@ -1,0 +1,60 @@
+{# PAGE: full document, reached by direct navigation. #}
+{% extends "base.html" %}
+
+{% block title %}Receipt Manager{% endblock %}
+
+{% block content %}
+
+<h2 class="mb-4">Receipt Management</h2>
+
+{% include "ledger/components/collective_switcher.html" %}
+
+<div id="receipt-table-container"
+     hx-get="{% url 'receipt_table_htmx' active_collective.id %}"
+     hx-trigger="load"
+     hx-swap="innerHTML">
+</div>
+
+
+<!-- ========================================================= -->
+<!-- JS -->
+<!-- ========================================================= -->
+
+<script>
+
+document.body.addEventListener("modalClose", function () {
+    // reload table
+    htmx.ajax("GET", "{% url 'receipt_table_htmx' active_collective.id %}", {
+        target: "#receipt-table",
+        swap: "innerHTML"
+    });
+    //close form
+    const modalEl = document.getElementById("modal");
+    const modal = bootstrap.Modal.getInstance(modalEl);
+
+    if (modal) {
+        modal.hide();
+    }
+});
+
+document.body.addEventListener("htmx:afterSwap", function (e) {
+
+    const fromHolder = document.getElementById("from-holder");
+    const toHolder = document.getElementById("to-holder");
+
+    if (fromHolder) {
+        fromHolder.addEventListener("change", function () {
+            loadAccounts(this.value, "from-account");
+        });
+    }
+
+    if (toHolder) {
+        toHolder.addEventListener("change", function () {
+            loadAccounts(this.value, "to-account");
+        });
+    }
+});
+
+</script>
+
+{% endblock %}

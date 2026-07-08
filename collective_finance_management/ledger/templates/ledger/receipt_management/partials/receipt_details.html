@@ -1,0 +1,134 @@
+{# PARTIAL: HTMX fragment for this feature's page only. #}
+<div class="p-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <strong>Associated Transactions</strong>
+        <button class="btn btn-sm btn-success"
+                hx-get="{% url 'add_transaction_htmx' receipt.id %}"
+                hx-target="#modalContent"
+                hx-trigger="click"
+                data-bs-toggle="modal"
+                data-bs-target="#modal">
+            + Transaction
+        </button>
+    </div>
+
+    {% if transactions %}
+        {% for t in transactions %}
+            {% with from_lines=t.lines.all|dictsort:"amount" %}
+
+            <div class="card mb-2">
+                <div class="card-body py-2">
+
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong>#{{ t.id }}</strong> — {{ t.description }}
+                        </div>
+
+                        <div class="btn-group">
+                            <!-- EDIT -->
+                            <button class="btn btn-sm btn-primary"
+                                    hx-get="{% url 'edit_transaction_htmx' t.id %}"
+                                    hx-target="#modalContent"
+                                    hx-trigger="click"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modal">
+                                Edit
+                            </button>
+                            <!-- DELETE -->
+                            {% if t.can_delete %}
+                                <button
+                                    class="btn btn-sm btn-danger"
+                                    hx-delete="{% url 'delete_transaction_htmx' t.id %}"
+                                    hx-confirm="Delete this transaction?">
+                                    Delete
+                                </button>
+                            {% else %}
+                                <span
+                                    title="Transaction cannot be deleted"
+                                    class="d-inline-block">
+                                    <button
+                                        class="btn btn-sm btn-outline-secondary"
+                                        disabled>
+                                        Delete
+                                    </button>
+                                </span>
+                            {% endif %}
+
+                        </div>
+                    </div>  
+                    <div class="text-muted small"  style="font-size: 0.75rem;">
+                        Created by:
+                        {% if t.created_by_holder %}
+                            {{ t.created_by_holder.name }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </div>
+                    <div class="text-muted small"  style="font-size: 0.75rem;">
+                        created at: {{ t.date|date:"Y-m-d" }}
+                    </small>
+
+                    <hr class="my-2">
+
+                    <!-- ================= FROM -> AMOUNT -> TO ================= -->
+                    <div class="row g-2 align-items-stretch">
+
+                        <!-- FROM -->
+                        <div class="col-md-4">
+                            <div class="card border-0 bg-light p-2 h-100">
+                                <div class="text-muted small mb-1">From</div>
+                                {% for line in t.lines.all %}
+                                    {% if line.amount < 0 %}
+                                        <div class="fw-bold">{{ line.account.account_holder.name }}</div>
+                                        <div class="small text-muted">{{ line.account.name }}</div>
+                                        {% if line.note %}
+                                            <div class="small text-muted fst-italic mt-1">{{ line.note }}</div>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- AMOUNT -->
+                        <div class="col-md-4 text-center">
+                            <div class="d-flex flex-column align-items-center justify-content-center h-100">
+                                <div class="d-flex align-items-center justify-content-center w-100">
+                                    <hr class="flex-grow-1">
+                                    <i class="bi bi-arrow-right-circle-fill fs-2 text-success mx-2"></i>
+                                    <hr class="flex-grow-1">
+                                </div>
+                                {% for line in t.lines.all %}
+                                    {% if line.amount > 0 %}
+                                        <div class="fw-bold fs-5 text-success">{{ line.amount }} €</div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- TO -->
+                        <div class="col-md-4">
+                            <div class="card border-0 bg-light p-2 h-100">
+                                <div class="text-muted small mb-1">To</div>
+                                {% for line in t.lines.all %}
+                                    {% if line.amount > 0 %}
+                                        <div class="fw-bold">{{ line.account.account_holder.name }}</div>
+                                        <div class="small text-muted">{{ line.account.name }}</div>
+                                        {% if line.note %}
+                                            <div class="small text-muted fst-italic mt-1">{{ line.note }}</div>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% endwith %}
+        {% endfor %}
+    {% else %}
+        <div class="text-muted">
+            No transactions linked to this receipt.
+        </div>
+    {% endif %}
+</div>

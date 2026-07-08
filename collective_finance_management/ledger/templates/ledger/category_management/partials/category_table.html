@@ -1,0 +1,173 @@
+{# PARTIAL: HTMX fragment for this feature's page only. #}
+<div id="{{ table_id }}" class="card shadow-sm">
+
+    <div class="card-header d-flex justify-content-between align-items-center">
+
+        <strong>
+            {% if category_type == "receipt" %}
+                Receipt Categories
+            {% else %}
+                Event Categories
+            {% endif %}
+        </strong>
+
+        <button class="btn btn-sm btn-success"
+                hx-get="{% url 'add_category_htmx' collective.id category_type %}"
+                hx-target="#modalContent"
+                hx-trigger="click"
+                data-bs-toggle="modal"
+                data-bs-target="#modal">
+            + Category
+        </button>
+
+    </div>
+
+    <div class="card-body p-0">
+
+        <table class="table mb-0 align-middle">
+
+           <thead>
+            <tr>
+
+                <!-- ID -->
+                <th class="text-center">
+                    <a class="text-dark overview-link"
+                       hx-get="{{ sort_links.id }}"
+                       hx-target="#{{ table_id }}"
+                       hx-swap="outerHTML">
+                        Category ID
+                        {% if current_sort == "id" %}▲{% elif current_sort == "-id" %}▼{% endif %}
+                    </a>
+                </th>
+
+                <!-- NAME -->
+                <th class="text-center">
+                    <a class="text-dark overview-link"
+                       hx-get="{{ sort_links.name }}"
+                       hx-target="#{{ table_id }}"
+                       hx-swap="outerHTML">
+                        Name
+                        {% if current_sort == "name" %}▲{% elif current_sort == "-name" %}▼{% endif %}
+                    </a>
+                </th>
+
+                <th class="text-center">Description</th>
+                <th class="text-end">Incoming</th>
+                <th class="text-end">Outgoing</th>
+                <th class="text-end">Balance</th>
+                <th></th>
+            </tr>
+        </thead>
+
+            <tbody>
+
+            {% for c in categories %}
+
+                <!-- MAIN ROW -->
+                <tr>
+
+                    <td class="text-center fw-bold">
+                        <a href="{% url 'category_overview_page' c.id %}" class="overview-link text-dark">#{{ c.id }}</a>
+                    </td>
+
+                    <td class="text-center fw-semibold">
+                        <a href="{% url 'category_overview_page' c.id %}" class="overview-link text-dark">{{ c.name }}</a>
+                    </td>
+
+                    <td class="text-center">
+                        {{ c.description|default:"—" }}
+                    </td>
+
+                    <td class="text-end text-success">
+                        {{ c.incoming_total|floatformat:2 }} €
+                    </td>
+
+                    <td class="text-end text-danger">
+                        {{ c.outgoing_total|floatformat:2 }} €
+                    </td>
+
+                    <td class="text-end fw-bold">
+                        {% with bal=c.balance_total %}
+                            {% if bal >= 0 %}
+                                <span class="text-success">{{ bal|floatformat:2 }} €</span>
+                            {% else %}
+                                <span class="text-danger">{{ bal|floatformat:2 }} €</span>
+                            {% endif %}
+                        {% endwith %}
+                    </td>
+
+                    <td class="text-end">
+
+                        <div class="btn-group">
+
+                            <!-- DETAILS: expands to show child categories + this category's own receipts -->
+                            <button class="btn btn-sm btn-outline-secondary"
+                                    hx-get="{% url 'category_children_htmx' c.id %}"
+                                    hx-target="#cat-children-{{ c.id }} .category-children-content"
+                                    hx-swap="innerHTML"
+                                    hx-on::after-request="
+                                        document.getElementById('cat-children-{{ c.id }}').classList.toggle('d-none');
+                                    ">
+                                Details
+                            </button>
+
+                            <!-- EDIT -->
+                            <button class="btn btn-sm btn-primary"
+                                    hx-get="{% url 'edit_category_htmx' c.id %}"
+                                    hx-target="#modalContent"
+                                    hx-trigger="click"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modal">
+                                Edit
+                            </button>
+
+                            <!-- DELETE -->
+                            {% if c.can_delete %}
+
+                                <button class="btn btn-sm btn-danger"
+                                        hx-delete="{% url 'delete_category_htmx' c.id %}"
+                                        hx-confirm="Delete this category?">
+                                    Delete
+                                </button>
+
+                            {% else %}
+
+                                <span class="d-inline-block"
+                                      title="Category has sub-categories and/or Receipts/Events associated to it and can not be deleted.">
+                                    <button class="btn btn-sm btn-outline-secondary" disabled>
+                                        Delete
+                                    </button>
+                                </span>
+
+                            {% endif %}
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
+                <!-- DETAILS ROW -->
+                <tr id="cat-children-{{ c.id }}" class="d-none">
+                    <td colspan="7" class="p-0 border-0">
+                        <div class="category-children-content px-3 py-2 border-top"></div>
+                    </td>
+                </tr>
+
+            {% empty %}
+
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-3">
+                        No categories found
+                    </td>
+                </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>

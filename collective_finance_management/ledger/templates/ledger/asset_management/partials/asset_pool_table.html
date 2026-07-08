@@ -1,0 +1,152 @@
+{# PARTIAL: HTMX fragment for this feature's page only. #}
+<div id="{{ table_id }}" class="card shadow-sm">
+
+    <div class="card-header d-flex justify-content-between align-items-center">
+
+        <strong>Asset Pools</strong>
+
+        <button class="btn btn-sm btn-success"
+                hx-get="{% url 'add_asset_pool_htmx' collective.id %}"
+                hx-target="#modalContent"
+                hx-trigger="click"
+                data-bs-toggle="modal"
+                data-bs-target="#modal">
+            + Asset Pool
+        </button>
+
+    </div>
+
+    <div class="card-body p-0">
+
+        <table class="table mb-0 align-middle">
+
+            <thead>
+            <tr>
+
+                <th class="text-center">
+                    <a class="text-dark overview-link"
+                       hx-get="{{ sort_links.id }}"
+                       hx-target="#{{ table_id }}"
+                       hx-swap="outerHTML">
+                        ID
+                        {% if current_sort == "id" %}▲{% elif current_sort == "-id" %}▼{% endif %}
+                    </a>
+                </th>
+
+                <th class="text-center">
+                    <a class="text-dark overview-link"
+                       hx-get="{{ sort_links.name }}"
+                       hx-target="#{{ table_id }}"
+                       hx-swap="outerHTML">
+                        Name
+                        {% if current_sort == "name" %}▲{% elif current_sort == "-name" %}▼{% endif %}
+                    </a>
+                </th>
+
+                <th class="text-center">
+                    <a class="text-dark overview-link"
+                       hx-get="{{ sort_links.acquisition_year }}"
+                       hx-target="#{{ table_id }}"
+                       hx-swap="outerHTML">
+                        Acquisition Year
+                        {% if current_sort == "acquisition_year" %}▲{% elif current_sort == "-acquisition_year" %}▼{% endif %}
+                    </a>
+                </th>
+
+                <th class="text-center">
+                    <a class="text-dark overview-link"
+                       hx-get="{{ sort_links.depreciation_years }}"
+                       hx-target="#{{ table_id }}"
+                       hx-swap="outerHTML">
+                        Depreciation Years
+                        {% if current_sort == "depreciation_years" %}▲{% elif current_sort == "-depreciation_years" %}▼{% endif %}
+                    </a>
+                </th>
+
+                <th class="text-end">Assets</th>
+                <th class="text-end">Acquisition Cost</th>
+                <th class="text-end">Remaining Value</th>
+                <th></th>
+            </tr>
+            </thead>
+
+            <tbody>
+
+            {% for p in asset_pools %}
+
+                <tr>
+
+                    <td class="text-center fw-bold">
+                        <a href="{% url 'asset_pool_overview_page' p.id %}" class="overview-link text-dark">#{{ p.id }}</a>
+                    </td>
+
+                    <td class="text-center fw-semibold">
+                        <a href="{% url 'asset_pool_overview_page' p.id %}" class="overview-link text-dark">{{ p.name }}</a>
+                    </td>
+
+                    <td class="text-center">
+                        {{ p.acquisition_year }}
+                    </td>
+
+                    <td class="text-center">
+                        {{ p.depreciation_years }}
+                    </td>
+
+                    <td class="text-end">
+                        {{ p.assets.count }}
+                    </td>
+
+                    <td class="text-end">
+                        {{ p.acquisition_cost }} €
+                    </td>
+
+                    <td class="text-end">
+                        {% with remaining=p.remaining_value %}
+                            <span class="{% if remaining > 0 %}text-success{% else %}text-danger{% endif %}">
+                                {{ remaining }} €
+                            </span>
+                        {% endwith %}
+                    </td>
+
+                    <td class="text-end">
+
+                        <div class="btn-group">
+
+                            <button class="btn btn-sm btn-primary"
+                                    hx-get="{% url 'edit_asset_pool_htmx' p.id %}"
+                                    hx-target="#modalContent"
+                                    hx-trigger="click"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modal">
+                                Edit
+                            </button>
+
+                            <button class="btn btn-sm btn-danger"
+                                    hx-delete="{% url 'delete_asset_pool_htmx' p.id %}"
+                                    hx-confirm="Delete this asset pool? Assets in it will not be deleted, only unassigned from the pool.">
+                                Delete
+                            </button>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
+            {% empty %}
+
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-3">
+                        No asset pools found
+                    </td>
+                </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>

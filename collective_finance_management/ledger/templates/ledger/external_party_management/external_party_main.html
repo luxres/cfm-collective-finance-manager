@@ -1,0 +1,35 @@
+{# PAGE: full document, reached by direct navigation. #}
+{% extends "base.html" %}
+
+{% block title %}External Party Manager{% endblock %}
+
+{% block content %}
+
+<h2 class="mb-4">External Parties Manager</h2>
+
+<div id="external-party-table">
+    {% include "ledger/external_party_management/partials/external_party_table.html" %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+
+document.body.addEventListener("modalClose", function () {
+
+    htmx.ajax("GET", "{% url 'external_party_table_htmx' %}", {
+        target: "#external-party-table",
+        swap: "innerHTML"
+    });
+
+    const modalEl = document.getElementById("modal");
+    const modal = bootstrap.Modal.getInstance(modalEl);
+
+    if (modal) {
+        modal.hide();
+    }
+});
+
+</script>
+{% endblock %}

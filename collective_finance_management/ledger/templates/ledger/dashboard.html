@@ -1,0 +1,237 @@
+{# PAGE: full document, reached by direct navigation. #}
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <h2 class="mb-4">Dashboard</h2>
+
+    <!-- ===================== -->
+    <!-- 1. USER'S COLLECTIVES -->
+    <!-- ===================== -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-dark text-white">
+            Your Collectives
+        </div>
+
+        <div class="card-body">
+
+            {% if user_memberships %}
+                <div class="row">
+
+                    {% for m in user_memberships %}
+                        {% if m.account_holder.holder_type == "collective" %}
+
+                        <div class="col-md-4 mb-3">
+
+                            <div class="card border">
+                                <div class="card-body">
+
+                                    <h5 class="card-title">
+                                        {{ m.account_holder.name }}
+                                    </h5>
+
+                                    <p class="text-muted mb-1">
+                                        Your Role: {{ m.role|title }}
+                                    </p>
+
+                                    <p class="text-muted">
+                                        Type: {{ m.account_holder.holder_type }}
+                                    </p>
+
+                                </div>
+                            </div>
+
+                        </div>
+
+                        {% endif %}
+                    {% endfor %}
+
+                </div>
+            {% else %}
+                <p class="text-muted">You are not part of any collectives yet.</p>
+            {% endif %}
+
+        </div>
+    </div>
+
+
+    <!-- ===================== -->
+    <!-- 2. PERSONAL ACCOUNTS -->
+    <!-- ===================== -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            Your Personal Finance Accounts
+        </div>
+
+        <div class="card-body">
+
+            {% if personal_accounts %}
+                <div class="row">
+
+                    {% for acc in personal_accounts %}
+                        <div class="col-md-4 mb-3">
+
+                            <div class="card">
+                                <div class="card-body">
+
+                                    <h5 class="card-title">
+                                        {{ acc.name }}
+                                    </h5>
+
+                                    <p class="mb-1">
+                                        Type: {{ acc.type }}
+                                    </p>
+
+                                    <p class="mb-1">
+                                        Currency: {{ acc.currency }}
+                                    </p>
+
+                                    <p class="fw-bold">
+                                        Balance: {{ acc.balance }}
+                                    </p>
+
+                                </div>
+                            </div>
+
+                        </div>
+                    {% endfor %}
+
+                </div>
+            {% else %}
+                <p class="text-muted">No personal finance accounts found.</p>
+            {% endif %}
+
+        </div>
+    </div>
+
+
+    <!-- ===================== -->
+    <!-- 3. COLLECTIVE ACCOUNTS -->
+    <!-- ===================== -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-success text-white">
+            Collective Finance Accounts
+        </div>
+
+        <div class="card-body">
+
+            {% if collective_accounts %}
+                <div class="row">
+
+                    {% for acc in collective_accounts %}
+                        <div class="col-md-4 mb-3">
+
+                            <div class="card">
+
+                                <div class="card-body">
+
+                                    <h5 class="card-title">
+                                        {{ acc.account_holder.name }}
+                                    </h5>
+
+                                    <p class="mb-1">
+                                        Account: {{ acc.name }}
+                                    </p>
+
+                                    <p class="mb-1">
+                                        Type: {{ acc.type }}
+                                    </p>
+
+                                    <p class="fw-bold">
+                                        Balance: {{ acc.balance }}
+                                    </p>
+
+                                    <!-- ===================== -->
+                                    <!-- ANALYTICS TOGGLE -->
+                                    <!-- ===================== -->
+                                    <button class="btn btn-sm btn-outline-primary mt-2"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#analytics-{{ acc.id }}">
+                                        Analytics
+                                    </button>
+
+                                    <!-- ===================== -->
+                                    <!-- ANALYTICS SECTION -->
+                                    <!-- ===================== -->
+                                    <div class="collapse mt-3" id="analytics-{{ acc.id }}">
+                                    <div class="border rounded p-3 bg-light">
+
+                                            <h6>Balance Timeline</h6>
+
+                                            <canvas id="line-{{ acc.id }}" height="120"></canvas>
+
+                                            {{ personal_timeline|json_script:"personal-timeline-data" }}
+                                            {{ collective_timeline|json_script:"collective-timeline-data" }}
+
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                        </div>
+                    {% endfor %}
+
+                </div>
+            {% else %}
+                <p class="text-muted">No collective accounts available.</p>
+            {% endif %}
+
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+const personalData = JSON.parse(
+    document.getElementById("personal-timeline-data").textContent
+);
+
+const collectiveData = JSON.parse(
+    document.getElementById("collective-timeline-data").textContent
+);
+
+function renderChart(accountId, timeline) {
+    const ctx = document.getElementById(`line-${accountId}`);
+    if (!ctx || !timeline) return;
+
+    new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: timeline.labels,
+            datasets: [{
+                label: "Balance",
+                data: timeline.data,
+                borderColor: "rgb(75, 192, 192)",
+                tension: 0.2,
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true }
+            }
+        }
+    });
+}
+
+// render all personal accounts
+Object.entries(personalData).forEach(([id, timeline]) => {
+    renderChart(id, timeline);
+});
+
+// render all collective accounts
+Object.entries(collectiveData).forEach(([id, timeline]) => {
+    renderChart(id, timeline);
+});
+</script>
+
+{% endblock %}

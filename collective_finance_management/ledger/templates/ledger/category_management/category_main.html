@@ -1,0 +1,95 @@
+{# PAGE: full document, reached by direct navigation. #}
+{% extends "base.html" %}
+
+{% block title %}Category Manager{% endblock %}
+
+{% block content %}
+
+<h2 class="mb-4">Category Management</h2>
+
+{% include "ledger/components/collective_switcher.html" %}
+
+<!-- ================= TABS ================= -->
+<ul class="nav nav-pills mb-3" id="category-tabs">
+
+    <li class="nav-item">
+        <button class="nav-link active"
+                data-bs-toggle="pill"
+                data-bs-target="#tab-receipt"
+                data-type="receipt"
+                hx-get="{% url 'category_table_htmx' active_collective.id 'receipt' %}"
+                hx-target="#category-table"
+                hx-swap="innerHTML">
+            Receipt Categories
+        </button>
+    </li>
+
+    <li class="nav-item">
+        <button class="nav-link"
+                data-bs-toggle="pill"
+                data-bs-target="#tab-event"
+                data-type="event"
+                hx-get="{% url 'category_table_htmx' active_collective.id 'event' %}"
+                hx-target="#category-table"
+                hx-swap="innerHTML">
+            Event Categories
+        </button>
+    </li>
+
+</ul>
+
+<!-- ================= TABLE CONTAINER ================= -->
+<div id="category-table"
+     hx-get="{% url 'category_table_htmx' active_collective.id 'receipt' %}"
+     hx-trigger="load"
+     hx-swap="innerHTML">
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+
+<script>
+
+let currentCategoryType = "receipt";
+
+// TAB SWITCH → update state + reload
+document.addEventListener("shown.bs.tab", function (event) {
+
+    const type = event.target.getAttribute("data-type");
+
+    if (!type) return;
+
+    currentCategoryType = type;
+
+    htmx.ajax(
+        "GET",
+        `/ledger/htmx/categories/{{ active_collective.id }}/${currentCategoryType}/category-table/`,
+        {
+            target: "#category-table",
+            swap: "innerHTML"
+        }
+    );
+});
+
+// MODAL CLOSE → reload current tab
+document.body.addEventListener("modalClose", function () {
+
+    htmx.ajax(
+        "GET",
+        `/ledger/htmx/categories/{{ active_collective.id }}/${currentCategoryType}/category-table/`,
+        {
+            target: "#category-table",
+            swap: "innerHTML"
+        }
+    );
+
+    const modalEl = document.getElementById("modal");
+    const modal = bootstrap.Modal.getInstance(modalEl);
+
+    if (modal) modal.hide();
+});
+
+</script>
+
+{% endblock %}

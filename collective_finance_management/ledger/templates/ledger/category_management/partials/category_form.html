@@ -1,0 +1,79 @@
+{# PARTIAL: HTMX fragment for this feature's page only. #}
+<form
+    method="post"
+    {% if category %}
+        hx-post="{% url 'edit_category_htmx' category.id %}"
+    {% else %}
+        hx-post="{% url 'add_category_htmx' active_collective.id category_type %}"
+    {% endif %}
+    hx-target="#modalContent"
+    hx-swap="innerHTML"
+>
+
+  {% csrf_token %}
+
+  <!-- ================= HEADER ================= -->
+  <div class="modal-header">
+
+      {% if category %}
+          Edit {{ category_type|title }} Category #{{ category.id }}
+      {% else %}
+          Add {{ category_type|title }} Category for {{ active_collective.name }}
+      {% endif %}
+
+      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+  </div>
+
+  <!-- ================= BODY ================= -->
+  <div class="modal-body">
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">
+        {{ form.non_field_errors }}
+      </div>
+    {% endif %}
+
+    <div class="row g-3">
+
+      {% for field in form %}
+
+        <div class="col-12">
+
+          <label class="form-label">
+            {{ field.label }}
+          </label>
+
+          {{ field }}
+
+          {% if field.errors %}
+            <div class="text-danger small">
+              {{ field.errors|striptags }}
+            </div>
+          {% endif %}
+
+        </div>
+
+      {% endfor %}
+
+    </div>
+
+  </div>
+
+  <!-- ================= FOOTER ================= -->
+  <div class="modal-footer">
+
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+      Cancel
+    </button>
+
+    <button type="submit" class="btn btn-success">
+      {% if category %}
+        Save Changes #{{ category.id }}
+      {% else %}
+        Add {{ category_type|title }} Category
+      {% endif %}
+    </button>
+
+  </div>
+
+</form>

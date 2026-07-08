@@ -1,0 +1,106 @@
+{# PAGE: full document, reached by direct navigation. #}
+{% extends "base.html" %}
+
+{% block title %}Event Manager{% endblock %}
+
+{% block content %}
+
+<h2 class="mb-4">Event Management</h2>
+
+{% include "ledger/components/collective_switcher.html" %}
+
+<div id="event-table-container"
+     hx-get="{% url 'event_table_htmx' active_collective.id %}"
+     hx-trigger="load"
+     hx-swap="innerHTML">
+</div>
+
+{% endblock %}
+
+{% block extra_js%}
+
+<!-- ========================================================= -->
+<!-- JS -->
+<!-- ========================================================= -->
+
+<script>
+
+document.body.addEventListener("modalClose", function () {
+    // reload table
+    htmx.ajax("GET", "{% url 'event_table_htmx' active_collective.id %}", {
+        target: "#event-table-container",
+        swap: "innerHTML"
+    });
+    //close form
+    const modalEl = document.getElementById("modal");
+    const modal = bootstrap.Modal.getInstance(modalEl);
+
+    if (modal) {
+        modal.hide();
+    }
+});
+
+//reload the FinanceAccounts if the AccountHolder is selected in the TransactionForm modal
+async function loadAccounts(holderId, targetSelectId) {
+    const select = document.getElementById(targetSelectId);
+
+    // reset state
+    select.innerHTML = `<option>Loading...</option>`;
+
+    if (!holderId) {
+        select.innerHTML = `<option value="">Select holder first</option>`;
+        return;
+    }
+
+    try {
+        const response = await fetch(`/ledger/api/finance-accounts-by-holder/${holderId}/`);
+        const data = await response.json();
+
+        select.innerHTML = ``;
+
+        if (data.accounts.length === 0) {
+            select.innerHTML = `<option value="">No accounts available</option>`;
+            return;
+        }
+
+        // build options
+        data.accounts.forEach(acc => {
+            const option = document.createElement("option");
+            option.value = acc.id;
+            option.textContent = `${acc.name} (${acc.type})`;
+            select.appendChild(option);
+        });
+
+        // ⭐ AUTO-SELECT FIRST ACCOUNT
+        select.value = data.accounts[0].id;
+
+        // optional: trigger change event if needed
+        select.dispatchEvent(new Event("change"));
+
+    } catch (err) {
+        select.innerHTML = `<option>Error loading accounts</option>`;
+        console.error(err);
+    }
+}
+
+document.body.addEventListener("htmx:afterSwap", function (e) {
+
+    const fromHolder = document.getElementById("from-holder");
+    const toHolder = document.getElementById("to-holder");
+
+    if (fromHolder) {
+        fromHolder.addEventListener("change", function () {
+            loadAccounts(this.value, "from-account");
+        });
+    }
+
+    if (toHolder) {
+        toHolder.addEventListener("change", function () {
+            loadAccounts(this.value, "to-account");
+        });
+    }
+});
+
+</script>
+
+{% endblock %}

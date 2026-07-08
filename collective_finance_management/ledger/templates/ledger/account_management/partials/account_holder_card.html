@@ -1,0 +1,270 @@
+{# PARTIAL: HTMX fragment for this feature's page only. #}
+<div class="card shadow-sm">
+
+    <!-- HEADER -->
+    <div class="card-header d-flex justify-content-between align-items-center">
+
+        <div>
+            <strong>{{ holder.name }}</strong>
+            <span class="text-muted">({{ holder.holder_type }})</span>
+
+            <span class="badge bg-primary ms-2">
+                Your Role:
+                {% if membership %}
+                    {{ membership.get_role_display }}
+                {% else %}
+                    member
+                {% endif %}
+            </span>
+        </div>
+
+        {% if membership.role == "admin" %}
+            <div class="d-flex gap-2">
+
+                <button
+                    class="btn btn-sm btn-success"
+                    hx-get="{% url 'add_cash_account_htmx' holder.id %}"
+                    hx-target="#modalContent"
+                    hx-swap="innerHTML"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modal">
+                    + Cash Account
+                </button>
+
+                <button
+                    class="btn btn-sm btn-success"
+                    hx-get="{% url 'add_bank_account_htmx' holder.id %}"
+                    hx-target="#modalContent"
+                    hx-swap="innerHTML"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modal">
+                    + Bank Account
+                </button>
+            </div>
+        {% endif %}
+
+    </div>
+
+    <div class="card-body">
+
+        <!-- ================= CASH ACCOUNTS CARD ================= -->
+        <div class="card mb-4 border-0 shadow-sm">
+
+            <div class="card-header bg-light">
+                <strong>Cash Accounts</strong>
+            </div>
+
+            <div class="card-body p-0">
+
+                {% if cash_accounts %}
+                <ul class="list-group list-group-flush">
+
+                    {% for acc in cash_accounts %}
+                        <li class="list-group-item">
+
+                            <div class="row align-items-center g-3">
+
+                                <!-- LEFT -->
+                                <div class="col-md-3">
+                                    <a href="{% url 'account_overview_page' acc.id %}" class="text-decoration-none text-dark fw-semibold">{{ acc.name }}</a>
+
+                                    <small class="text-muted">{{ acc.get_type_display }}</small>
+                                </div>
+
+                                <!-- RIGHT -->
+                                <div class="col-md-9 text-end">
+
+                                    <div class="fw-semibold
+                                        {% if acc.balance < 0 %}text-danger{% else %}text-success{% endif %}">
+                                        {{ acc.balance|floatformat:2 }} €
+                                    </div>
+
+                                    <div class="btn-group">
+
+                                        <button
+                                            class="btn btn-sm btn-outline-secondary"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#tx-{{ acc.id }}"
+                                            hx-get="{% url 'account_transactions_htmx' acc.id %}"
+                                            hx-trigger="click once"
+                                            hx-target="#tx-{{ acc.id }}"
+                                            hx-swap="innerHTML">
+                                            Details
+                                        </button>
+
+                                        <button
+                                            class="btn btn-sm btn-primary"
+                                            hx-get="{% url 'edit_cash_account_htmx' acc.id %}"
+                                            hx-target="#modalContent"
+                                            hx-swap="innerHTML"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#modal">
+                                            Edit
+                                        </button>
+                                        {% if acc.can_delete %}
+                                            <button
+                                                class="btn btn-sm btn-danger"
+                                                hx-delete="{% url 'delete_account_htmx' acc.id %}"
+                                                hx-confirm="Delete this account?">
+                                                Delete
+                                            </button>
+                                        {% else %}
+                                            <span
+                                                title="Account cannot be deleted because it contains Transactions"
+                                                class="d-inline-block">
+                                                <button
+                                                    class="btn btn-sm btn-outline-secondary"
+                                                    disabled>
+                                                    Delete
+                                                </button>
+                                            </span>
+                                        {% endif %}
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div id="tx-{{ acc.id }}" class="collapse mt-2"></div>
+
+                        </li>
+                    {% endfor %}
+
+                </ul>
+                {% else %}
+                    <div class="p-3 text-muted">No cash accounts</div>
+                {% endif %}
+
+            </div>
+        </div>
+
+
+        <!-- ================= BANK ACCOUNTS CARD ================= -->
+        <div class="card border-0 shadow-sm">
+
+            <div class="card-header bg-light">
+                <strong>Bank Accounts</strong>
+            </div>
+
+            <div class="card-body p-0">
+
+                {% if bank_accounts %}
+                <ul class="list-group list-group-flush">
+
+                    {% for acc in bank_accounts %}
+                        <li class="list-group-item">
+
+                            <div class="row align-items-center g-3">
+
+                                <!-- LEFT -->
+                                <div class="col-md-3">
+                                    <a href="{% url 'account_overview_page' acc.id %}" class="text-decoration-none text-dark fw-semibold">{{ acc.name }}</a>
+                                    <small class="text-muted">{{ acc.get_type_display }}</small>
+                                </div>
+
+                                <!-- MIDDLE -->
+                                <div class="col-md-6">
+
+                                    <div class="p-2 bg-light border rounded small">
+                                        <div class="row g-2">
+
+                                            <div class="col-md-3">
+                                                <div class="text-uppercase text-muted">IBAN</div>
+                                                <div class="fw-semibold">{{ acc.bank_details.iban }}</div>
+                                            </div>
+
+                                            <div class="col-md-3">
+                                                <div class="text-uppercase text-muted">BIC</div>
+                                                <div class="fw-semibold">
+                                                    {{ acc.bank_details.bic|default:"-" }}
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-3">
+                                                <div class="text-uppercase text-muted">Bank</div>
+                                                <div class="fw-semibold">
+                                                    {{ acc.bank_details.bank_name|default:"-" }}
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-3">
+                                                <div class="text-uppercase text-muted">Holder</div>
+                                                <div class="fw-semibold">
+                                                    {{ acc.bank_details.account_holder_name }}
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <!-- RIGHT -->
+                                <div class="col-md-3 text-end">
+
+                                    <div class="fw-semibold
+                                        {% if acc.balance < 0 %}text-danger{% else %}text-success{% endif %}">
+                                        {{ acc.balance|floatformat:2 }} €
+                                    </div>
+
+                                    <div class="btn-group">
+
+                                        <button
+                                            class="btn btn-sm btn-outline-secondary"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#tx-{{ acc.id }}"
+                                            hx-get="{% url 'account_transactions_htmx' acc.id %}"
+                                            hx-trigger="click once"
+                                            hx-target="#tx-{{ acc.id }}"
+                                            hx-swap="innerHTML">
+                                            Details
+                                        </button>
+
+                                        <button
+                                            class="btn btn-sm btn-primary"
+                                            hx-get="{% url 'edit_bank_account_htmx' acc.id %}"
+                                            hx-target="#modalContent"
+                                            hx-swap="innerHTML"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#modal">
+                                            Edit
+                                        </button>
+                                        {% if acc.can_delete %}
+                                            <button
+                                                class="btn btn-sm btn-danger"
+                                                hx-delete="{% url 'delete_account_htmx' acc.id %}"
+                                                hx-confirm="Delete this account?">
+                                                Delete
+                                            </button>
+                                        {% else %}
+                                            <span
+                                                title="Account cannot be deleted because it contains transactions"
+                                                class="d-inline-block">
+                                                <button
+                                                    class="btn btn-sm btn-outline-secondary"
+                                                    disabled>
+                                                    Delete
+                                                </button>
+                                            </span>
+                                        {% endif %}
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div id="tx-{{ acc.id }}" class="collapse mt-2"></div>
+
+                        </li>
+                    {% endfor %}
+
+                </ul>
+                {% else %}
+                    <div class="p-3 text-muted">No bank accounts</div>
+                {% endif %}
+
+            </div>
+        </div>
+
+    </div>
+</div>

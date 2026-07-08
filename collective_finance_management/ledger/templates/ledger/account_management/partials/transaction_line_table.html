@@ -1,0 +1,60 @@
+{# PARTIAL: HTMX fragment for this feature's page only. #}
+<div class="card card-body mt-2 bg-light">
+    <div class="table-responsive">
+        <table class="table table-sm align-middle">
+            <thead>
+                <tr>
+                    <th class="text-left">Transaction Line ID</th>
+                    <th class="text-center">Receipt ID</th>
+                    <th class="text-center">Transaction Note</th>
+                    <th class="text-center">Event</th>
+                    <th class="text-center">Counterparty</th>
+                    <th class="text-center">Date</th>
+                    <th class="text-center">Created By</th>
+                    <th class="text-end">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for line in lines %}
+                <tr>
+                    <td class="text-center fw-bold">#{{ line.transaction.id }}</td>
+                    <td class="text-center fw-bold">
+                        {% if line.transaction.receipt.id %}
+                            <a href="{% url 'receipt_overview_page' line.transaction.receipt.id %}" class="text-decoration-none text-dark">#{{ line.transaction.receipt.id }}</a>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="text-center">{{ line.transaction.description|default:"—" }}</td>
+                    <td class="text-center">
+                        {% if line.transaction.receipt.event %}
+                            <a href="{% url 'event_overview_page' line.transaction.receipt.event.id %}" class="text-decoration-none text-dark">{{ line.transaction.receipt.event.name }}</a>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if line.counterparty_line %}
+                            {{ line.counterparty_line.account.account_holder.name }}
+                            <div class="text-muted small">{{ line.counterparty_line.account.name }}</div>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td class="text-center">{{ line.transaction.date|date:"Y-m-d"|default:"—" }}</td>
+                    <td class="text-center">{{ line.transaction.created_by_holder.name|default:"—" }}</td>
+                    <td class="text-end">
+                        <span class="{% if line.amount < 0 %}text-danger{% else %}text-success{% endif %}">
+                            {{ line.amount }} €
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" class="text-muted">No transactions</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,137 @@
+{# COMPONENT: reusable fragment, {% include %}'d from more than one page. #}
+{{ chart_labels|json_script:"chart-labels" }}
+{{ income_data|json_script:"income-data" }}
+{{ expense_data|json_script:"expense-data" }}
+{{ total_income|json_script:"total-income" }}
+{{ total_expense|json_script:"total-expense" }}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    function readJSON(id, fallback) {
+        try {
+            const el = document.getElementById(id);
+            if (!el) return fallback;
+            const parsed = JSON.parse(el.textContent);
+            return parsed === null || parsed === undefined ? fallback : parsed;
+        } catch (err) {
+            console.error(`Could not parse #${id}:`, err);
+            return fallback;
+        }
+    }
+
+    const labels = readJSON("chart-labels", []);
+    const income = readJSON("income-data", []);
+    const expense = readJSON("expense-data", []);
+
+    const totalIncome = readJSON("total-income", 0);
+    const totalExpense = readJSON("total-expense", 0);
+
+    let running = 0;
+    const cumulativeBalance = labels.map((_, i) => {
+        running += (income[i] || 0) - (expense[i] || 0);
+        return running;
+    });
+
+    const eur = (v) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(v);
+
+    let cashFlowChart, netChart, totalChart;
+    let chartsRendered = false;
+
+    function renderCharts() {
+
+        if (chartsRendered) return;
+
+        if (!labels.length) {
+            document.getElementById("charts-wrapper").classList.add("d-none");
+            document.getElementById("charts-empty-state").classList.remove("d-none");
+            chartsRendered = true;
+            return;
+        }
+
+        try {
+            cashFlowChart = new Chart(document.getElementById('cashFlowChart'), {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        { type: 'bar', label: 'Income', data: income, backgroundColor: 'rgba(25,135,84,0.75)', yAxisID: 'y' },
+                        { type: 'bar', label: 'Expenses', data: expense, backgroundColor: 'rgba(220,53,69,0.75)', yAxisID: 'y' },
+                        { type: 'line', label: 'Running Balance', data: cumulativeBalance, borderColor: 'rgba(13,110,253,1)',
+                          backgroundColor: 'rgba(13,110,253,0.1)', tension: 0.3, yAxisID: 'y1', pointRadius: 2 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${eur(ctx.parsed.y)}` } }
+                    },
+                    scales: {
+                        y: { position: 'left', title: { display: true, text: 'Daily amount (€)' } },
+                        y1: { position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Running balance (€)' } }
+                    }
+                }
+            });
+
+            netChart = new Chart(document.getElementById('netTrendChart'), {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Cumulative Balance', data: cumulativeBalance, borderColor: 'rgba(13,110,253,1)',
+                        backgroundColor: 'rgba(13,110,253,0.15)', tension: 0.3, fill: true, pointRadius: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { tooltip: { callbacks: { label: (ctx) => `Balance: ${eur(ctx.parsed.y)}` } } },
+                    scales: { y: { title: { display: true, text: 'Balance (€)' } } }
+                }
+            });
+
+            totalChart = new Chart(document.getElementById('totalBarChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Income', 'Expenses', 'Net'],
+                    datasets: [{
+                        label: 'Total',
+                        data: [totalIncome, totalExpense, totalIncome - totalExpense],
+                        backgroundColor: ['rgba(25,135,84,0.75)', 'rgba(220,53,69,0.75)', 'rgba(13,110,253,0.75)']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: (ctx) => eur(ctx.parsed.y) } }
+                    }
+                }
+            });
+
+            chartsRendered = true;
+
+        } catch (err) {
+            console.error("Failed to render charts:", err);
+        }
+    }
+
+    document.addEventListener('shown.bs.tab', function (event) {
+        if (event.target?.getAttribute('data-bs-target') === '#tab-charts') {
+            renderCharts();
+            requestAnimationFrame(() => {
+                cashFlowChart?.resize();
+                netChart?.resize();
+                totalChart?.resize();
+            });
+        }
+    });
+
+});
+</script>

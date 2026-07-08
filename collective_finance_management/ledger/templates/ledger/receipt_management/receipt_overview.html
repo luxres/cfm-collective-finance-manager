@@ -1,0 +1,35 @@
+{# PAGE: full document, reached by direct navigation. #}
+{% extends "base.html" %}
+
+{% block title %}
+Receipt Overview — #{{ receipt.id }}
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-3">
+    <button class="btn btn-sm btn-link text-decoration-none text-secondary ps-0 mb-2"
+            onclick="history.back()">
+        <i class="bi bi-arrow-left"></i> Back
+    </button>
+
+    {% include "ledger/components/overview_header.html" %}
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div id="receipt-details"
+                 hx-get="{% url 'receipt_details_htmx' receipt.id %}"
+                 hx-trigger="load, receiptsUpdated from:body"
+                 hx-target="this"
+                 hx-swap="innerHTML">
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+{% endblock %}

@@ -1,0 +1,100 @@
+{# PAGE: full document, reached by direct navigation. #}
+{% extends "base.html" %}
+
+{% block title %}
+Asset Pool Overview — {{ asset_pool.name }}
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-3">
+
+    <button class="btn btn-sm btn-link text-decoration-none text-secondary ps-0 mb-2"
+            onclick="history.back()">
+        <i class="bi bi-arrow-left"></i> Back
+    </button>
+
+    {% include "ledger/components/overview_header.html" %}
+
+    <ul class="nav nav-pills mb-3">
+        <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tab-schedule">Depreciation Schedule</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-assets">Assets in Pool</button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+
+        <div class="tab-pane fade show active" id="tab-schedule">
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <table class="table mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th class="text-center">Year</th>
+                                <th class="text-end">Annual Depreciation</th>
+                                <th class="text-end">Accumulated Depreciation</th>
+                                <th class="text-end">Remaining Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in schedule %}
+                                <tr>
+                                    <td class="text-center">{{ row.year }}</td>
+                                    <td class="text-end">{{ row.annual_depreciation }} €</td>
+                                    <td class="text-end">{{ row.accumulated_depreciation }} €</td>
+                                    <td class="text-end fw-bold">{{ row.remaining_value }} €</td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-3">No schedule available</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="tab-assets">
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <table class="table mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th class="text-center">ID</th>
+                                <th class="text-center">Name</th>
+                                <th class="text-center">Purchase Date</th>
+                                <th class="text-end">Purchase Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for a in assets %}
+                                <tr>
+                                    <td class="text-center fw-bold">
+                                        <a href="{% url 'asset_overview_page' a.id %}" class="overview-link text-dark">#{{ a.id }}</a>
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="{% url 'asset_overview_page' a.id %}" class="overview-link text-dark">{{ a.name }}</a>
+                                    </td>
+                                    <td class="text-center">{{ a.purchase_date|date:"d.m.Y" }}</td>
+                                    <td class="text-end">{{ a.purchase_price }} €</td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-3">No assets in this pool yet</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

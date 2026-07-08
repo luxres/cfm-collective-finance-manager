@@ -1,0 +1,20 @@
+{# COMPONENT: reusable fragment, {% include %}'d from more than one page. #}
+{% if uploaded %}
+    <div class="text-success">
+        ✔ Uploaded:
+        <a href="{% url 'receipt_file_htmx' upload_session.receipt.id %}" target="_blank" class="overview-link">
+            <i class="bi bi-file-earmark-pdf"></i>
+            {{ upload_session.file.name|cut:"receipts/" }}
+        </a>
+    </div>
+
+    {% if upload_session.uploaded_at %}
+        <div class="text-muted small">
+            Uploaded at: {{ upload_session.uploaded_at|date:"d M Y, H:i" }}
+        </div>
+    {% endif %}
+{% else %}
+    <div class="text-muted">
+        No file uploaded yet
+    </div>
+{% endif %}
