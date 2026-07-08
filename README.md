@@ -1,12 +1,11 @@
 # Ledger — README
 
 `ledger` is a bookkeeping app for organizations that have a "collective"
-structure — typically a *Verein* (non-profit association) with several
+structure, typically a low-hierarchy group of people with several
 sub-groups, events, and a mix of cash and bank accounts. It provides
 double-entry accounts and transactions, a receipt/document workflow
 (including a "scan this QR code with your phone" upload flow), fixed-asset
 depreciation tracking, and a German EÜR tax export.
-
 
 ---
 
