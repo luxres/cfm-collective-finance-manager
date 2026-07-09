@@ -1,7 +1,7 @@
 services:
   django:
     build: .
-
+    pull_policy: always
     env_file:
       - stack.env
 
